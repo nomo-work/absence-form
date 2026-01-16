@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>欠勤・遅刻連絡フォーム</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 480px;
+      margin: auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>欠勤・遅刻連絡</h2>
+
+    <form id="absenceForm" onsubmit="event.preventDefault(); submitForm();">
+
+      <label>名前
+        <input id="name" required />
+      </label>
+
+      <label>社員番号
+        <input id="employee_no" required />
+      </label>
+
+      <label>所属
+        <input id="department" />
+      </label>
+
+      <label>種別
+        <select id="type">
+          <option value="休み">休み</option>
+          <option value="遅刻">遅刻</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+
+      <label>コメント
+        <textarea id="comment" rows="4"></textarea>
+      </label>
+
+      <button id="submitBtn" type="submit">送信</button>
+    </form>
+
+    <p id="message"></p>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://ffpuqxyufqugotivqkgi.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmcHVxeHl1ZnF1Z290aXZxa2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MzA4MTksImV4cCI6MjA4NDEwNjgxOX0.pIHkRyoUMf-fUxH64CZIvt457qJSL_NbCANCWRSYSNg";
+
+let sending = false;
+
+async function submitForm() {
+  if (sending) return;
+  sending = true;
+
+  const button = document.getElementById("submitBtn");
+  const message = document.getElementById("message");
+
+  button.disabled = true;
+  button.innerText = "送信中…";
+  message.innerText = "";
+
+  const data = {
+    name: document.getElementById("name").value,
+    employee_no: document.getElementById("employee_no").value,
+    department: document.getElementById("department").value,
+    type: document.getElementById("type").value,
+    comment: document.getElementById("comment").value
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/absence_reports`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      message.innerText = "送信しました。ご連絡ありがとうございます。";
+      document.getElementById("absenceForm").reset(); // ← 入力クリア
+    } else {
+      message.innerText = "送信に失敗しました。再度お試しください。";
+    }
+  } catch (e) {
+    message.innerText = "通信エラーが発生しました。";
+  } finally {
+    button.disabled = false;
+    button.innerText = "送信";
+    sending = false;
+  }
+}
+</script>
+
+</body>
+</html>
