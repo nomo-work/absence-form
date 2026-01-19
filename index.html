@@ -91,9 +91,10 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIs...";
 
 let sending = false;
 
-/* ★ ここから追加 ★ */
 async function loadDepartments() {
   const select = document.getElementById("department");
+
+  // ここが動けば「読み込み中…」は消える
   select.innerHTML = '<option value="">選択してください</option>';
 
   try {
@@ -121,7 +122,7 @@ async function loadDepartments() {
     select.innerHTML = '<option value="">所属の取得に失敗しました</option>';
   }
 }
-/* ★ ここまで追加 ★ */
+
 
 async function submitForm() {
   if (sending) return;
@@ -138,5 +139,6 @@ window.addEventListener("DOMContentLoaded", loadDepartments);
 
 </body>
 </html>
+
 
 
