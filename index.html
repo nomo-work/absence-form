@@ -95,52 +95,55 @@ let sending = false;
 
 async function loadDepartments() {
   const select = document.getElementById("department");
+  const message = document.getElementById("message");
 
-  // ここが動けば「読み込み中…」は消える
+  // ここが動けば「読み込み中…」は必ず消えます
   select.innerHTML = '<option value="">選択してください</option>';
+  message.innerText = "所属一覧を読み込み中…";
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/departments?select=department_name&active=eq.true&order=department_name.asc`,
-      {
-        method: "GET",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`
-        }
+    const url = `${SUPABASE_URL}/rest/v1/departments?select=department_name&active=eq.true&order=department_name.asc`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`
       }
-    );
+    });
 
-    if (!res.ok) throw new Error("fetch failed");
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`HTTP ${res.status}: ${t}`);
+    }
 
     const rows = await res.json();
+
+    if (!rows.length) {
+      message.innerText = "所属が0件です（departmentsにデータが入っているか確認してください）";
+      return;
+    }
+
     rows.forEach(r => {
       const opt = document.createElement("option");
       opt.value = r.department_name;
       opt.textContent = r.department_name;
       select.appendChild(opt);
     });
+
+    message.innerText = "所属一覧の読み込み完了";
   } catch (e) {
+    message.innerText = `所属の取得に失敗: ${e.message}`;
     select.innerHTML = '<option value="">所属の取得に失敗しました</option>';
   }
 }
 
-
-async function submitForm() {
-  if (sending) return;
-  sending = true;
-
-  const button = document.getElementById("submitBtn");
-  const message = document.getElementById("message");
-
-  ...
-}
  window.addEventListener("DOMContentLoaded", loadDepartments);
 </script>
 
 
 </body>
 </html>
+
 
 
 
