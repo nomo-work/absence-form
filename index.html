@@ -98,7 +98,7 @@ async function loadDepartments() {
 
   // ここが動けば「読み込み中…」は必ず消えます
   select.innerHTML = '<option value="">選択してください</option>';
-  message.innerText = "所属一覧を読み込み中…";
+  // message.innerText = "所属一覧を読み込み中…";
 
   try {
     const url = `${SUPABASE_URL}/rest/v1/departments?select=department_name,active&active=eq.true&order=department_name.asc`;
@@ -143,6 +143,7 @@ async function loadDepartments() {
 
 </body>
 </html>
+
 
 
 
