@@ -126,17 +126,17 @@
   }
 function formatJst(isoString){
   if(!isoString) return "";
-  const d = new Date(isoString);
-  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const d = new Date(isoString); // ★ 自動でJSTになる
 
-  const y = jst.getFullYear();
-  const m = String(jst.getMonth() + 1).padStart(2, "0");
-  const day = String(jst.getDate()).padStart(2, "0");
-  const hh = String(jst.getHours()).padStart(2, "0");
-  const mm = String(jst.getMinutes()).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
 
   return `${y}-${m}-${day} ${hh}:${mm}`;
 }
+
 
 function downloadCSV(rows){
   if(!rows.length){ msg("対象データがありません（0件）"); return; }
@@ -210,6 +210,7 @@ function formatJst(isoString){
 </script>
 </body>
 </html>
+
 
 
 
