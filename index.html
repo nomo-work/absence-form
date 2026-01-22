@@ -106,7 +106,7 @@ async function loadDepartments() {
   select.innerHTML = '<option value="">選択してください</option>';
 
   try {
-    const url = `${SUPABASE_URL}/rest/v1/departments?select=department_name&active=eq.true&order=department_name.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/departments?select=department_name,active,sort_order&active=eq.true&order=sort_order.asc.nullslast&order=department_name.asc`;
     const res = await fetch(url, {
       headers: {
         "apikey": SUPABASE_KEY,
