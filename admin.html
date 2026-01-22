@@ -115,7 +115,7 @@
     rows.forEach(r=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${esc(r.created_at)}</td>
+        <td>${formatJst(r.created_at)}</td>
         <td>${esc(r.name)}</td>
         <td>${esc(r.department)}</td>
         <td>${esc(r.type)}</td>
@@ -145,6 +145,21 @@ const blob = new Blob([bom + lines.join("\n")], {
     a.click();
     URL.revokeObjectURL(a.href);
   }
+function formatJst(isoString){
+  if(!isoString) return "";
+  const d = new Date(isoString);
+
+  // JSTに変換
+  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+
+  const y = jst.getFullYear();
+  const m = String(jst.getMonth() + 1).padStart(2, "0");
+  const day = String(jst.getDate()).padStart(2, "0");
+  const hh = String(jst.getHours()).padStart(2, "0");
+  const mm = String(jst.getMinutes()).padStart(2, "0");
+
+  return `${y}-${m}-${day} ${hh}:${mm}`;
+}
 
   document.getElementById("searchBtn").onclick = async ()=>{
     msg("取得中…");
@@ -171,4 +186,5 @@ const blob = new Blob([bom + lines.join("\n")], {
 </script>
 </body>
 </html>
+
 
