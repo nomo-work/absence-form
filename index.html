@@ -55,7 +55,9 @@
 
 <body>
   <div class="container">
-    <h2>野田瀬戸支店　休み・遅刻　連絡フォーム</h2>
+   <h2>野田瀬戸支店　休み・遅刻　連絡フォーム</h2>
+<p id="nowTime" style="text-align:center; font-weight:bold;"></p>
+
 
     <form id="absenceForm" onsubmit="event.preventDefault(); submitForm();">
 
@@ -147,6 +149,18 @@ async function submitForm() {
     type: document.getElementById("type").value,
     comment: document.getElementById("comment").value
   };
+function updateNowTime(){
+  const d = new Date(); // ブラウザが自動で日本時間
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+
+  document.getElementById("nowTime").innerText =
+    `現在日時：${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+}
 
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/absence_reports`, {
