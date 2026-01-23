@@ -61,62 +61,52 @@
     </table>
   </div>
 
- <script>
+<script>
   const SUPABASE_URL = "https://ffpuqxyufqugotivqkgi.supabase.co";
   const SUPABASE_KEY = "sb_publishable_5247tSd7ptdrSv6y0972rA_zm_6t99i";
 
-  const msg = (t)=>document.getElementById("msg").innerText=t||"";
-  const showTable = (on)=>document.getElementById("tbl").style.display = on ? "table" : "none";
-
-  function toJstStartISO(d){ return `${d}T00:00:00+09:00`; }
-  function toJstEndISO(d){ return `${d}T23:59:59+09:00`; }
-
-   function fmtJstText(s){
-  if(!s) return "";
-  // 2026-01-23T17:02:15 → 2026-01-23 17:02:15
-  return String(s).replace("T", " ").slice(0, 19);
-}
+  const msg = (t)=>{ const el=document.getElementById("msg"); if(el) el.innerText=t||""; };
+  const showTable = (on)=>{ const t=document.getElementById("tbl"); if(t) t.style.display = on ? "table" : "none"; };
 
   function esc(v){
     if(v==null) return "";
     return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   }
+
+  // DBの created_at_jst (timestamp) を「YYYY-MM-DD HH:MM:SS」に
+  function fmtJstText(s){
+    if(!s) return "";
+    // 2026-01-23T17:02:15 → 2026-01-23 17:02:15
+    return String(s).replace("T", " ").slice(0, 19);
+  }
+
   function csvEscape(v){
     if(v==null) return "";
     const s=String(v);
     return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
   }
 
- async function fetchRows(){
-  const start = document.getElementById("startDate").value; // YYYY-MM-DD
-  const end = document.getElementById("endDate").value;
+  async function fetchRows(){
+    const start = document.getElementById("startDate").value; // YYYY-MM-DD
+    const end = document.getElementById("endDate").value;
 
-  const params = new URLSearchParams();
-  params.set("select", "created_at_jst,name,department,type,comment");
-  params.set("order", "created_at_jst.asc");
+    const params = new URLSearchParams();
+    params.set("select", "created_at_jst,name,department,type,comment");
+    params.set("order", "created_at_jst.asc");
 
-  // created_at_jst は "timestamp"（タイムゾーン無し）なので、JSTの文字列で絞り込む
-  if (start) params.append("created_at_jst", `gte.${start}T00:00:00`);
-  if (end)   params.append("created_at_jst", `lte.${end}T23:59:59`);
+    if (start) params.append("created_at_jst", `gte.${start}T00:00:00`);
+    if (end)   params.append("created_at_jst", `lte.${end}T23:59:59`);
 
-  const url = `${SUPABASE_URL}/rest/v1/absence_reports?${params.toString()}`;
+    const url = `${SUPABASE_URL}/rest/v1/absence_reports?${params.toString()}`;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
-      "Accept": "application/json"
-    }
-  });
-
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`HTTP ${res.status}: ${t}`);
-  }
-  return await res.json();
-}
-
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Accept": "application/json"
+      }
+    });
 
     if (!res.ok) {
       const t = await res.text();
@@ -128,106 +118,89 @@
   function renderTable(rows){
     const tbody = document.getElementById("tbody");
     tbody.innerHTML = "";
+
     rows.forEach(r=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
-       <td>${fmtJstText(r.created_at_jst)}</td>
+        <td>${esc(fmtJstText(r.created_at_jst))}</td>
         <td>${esc(r.name)}</td>
         <td>${esc(r.department)}</td>
         <td>${esc(r.type)}</td>
-        <td>${esc(r.comment)}</td>`;
+        <td>${esc(r.comment)}</td>
+      `;
       tbody.appendChild(tr);
     });
-    showTable(rows.length>0);
+
+    showTable(rows.length > 0);
   }
-function formatJst(isoString){
-  if(!isoString) return "";
-  const d = new Date(isoString); // 自動で日本時間
 
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
+  function downloadCSV(rows){
+    if(!rows.length){ msg("対象データがありません（0件）"); return; }
 
-  return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
-}
+    const headers = ["datetime","name","department","type","comment"];
+    const lines = [
+      headers.join(","),
+      ...rows.map(r => [
+        csvEscape(fmtJstText(r.created_at_jst)),
+        csvEscape(r.name),
+        csvEscape(r.department),
+        csvEscape(r.type),
+        csvEscape(r.comment)
+      ].join(","))
+    ];
 
+    // Excel文字化け対策（BOM）
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + lines.join("\n")], { type:"text/csv;charset=utf-8;" });
 
+    const start = document.getElementById("startDate").value || "all";
+    const end = document.getElementById("endDate").value || "all";
 
-function downloadCSV(rows){
-  if(!rows.length){ msg("対象データがありません（0件）"); return; }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `absence_reports_${start}_${end}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
-  // CSVのヘッダー（1列目を datetime にする）
-  const headers = ["datetime","name","department","type","comment"];
+  // ★ ボタンのイベントは「DOMができてから」必ず登録する
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchBtn = document.getElementById("searchBtn");
+    const csvBtn = document.getElementById("csvBtn");
 
-  const lines = [
-    headers.join(","),
-    ...rows.map(r => [
-      csvEscape(formatJst(r.created_at)), // ★ここがJST整形
-      csvEscape(r.name),
-      csvEscape(r.department),
-      csvEscape(r.type),
-      csvEscape(r.comment)
-    ].join(","))
-  ];
-
-  // ★Excel文字化け対策（BOM付きUTF-8）
-  const bom = "\uFEFF";
-  const blob = new Blob([bom + lines.join("\n")], { type:"text/csv;charset=utf-8;" });
-
-  const start = document.getElementById("startDate").value || "all";
-  const end = document.getElementById("endDate").value || "all";
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `absence_reports_${start}_${end}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function formatJst(isoString){
-  if(!isoString) return "";
-  const d = new Date(isoString);
-
-  // JSTに変換
-  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-
-  const y = jst.getFullYear();
-  const m = String(jst.getMonth() + 1).padStart(2, "0");
-  const day = String(jst.getDate()).padStart(2, "0");
-  const hh = String(jst.getHours()).padStart(2, "0");
-  const mm = String(jst.getMinutes()).padStart(2, "0");
-
-  return `${y}-${m}-${day} ${hh}:${mm}`;
-}
-
-  document.getElementById("searchBtn").onclick = async ()=>{
-    msg("取得中…");
-    try{
-      const rows = await fetchRows();
-      renderTable(rows);
-      msg(rows.length ? `表示しました（${rows.length}件）` : "0件です");
-    }catch(e){
-      msg("失敗: " + (e.message || e));
-      showTable(false);
+    if(!searchBtn || !csvBtn){
+      msg("ボタンIDが見つかりません（searchBtn / csvBtn を確認してください）");
+      return;
     }
-  };
 
-  document.getElementById("csvBtn").onclick = async ()=>{
-    msg("CSV作成中…");
-    try{
-      const rows = await fetchRows();
-      downloadCSV(rows);
-      msg("CSVをダウンロードしました");
-    }catch(e){
-      msg("失敗: " + (e.message || e));
-    }
-  };
+    searchBtn.onclick = async ()=>{
+      msg("取得中…");
+      try{
+        const rows = await fetchRows();
+        renderTable(rows);
+        msg(rows.length ? `表示しました（${rows.length}件）` : "0件です");
+      }catch(e){
+        msg("失敗: " + (e.message || e));
+        showTable(false);
+      }
+    };
+
+    csvBtn.onclick = async ()=>{
+      msg("CSV作成中…");
+      try{
+        const rows = await fetchRows();
+        downloadCSV(rows);
+        msg("CSVをダウンロードしました");
+      }catch(e){
+        msg("失敗: " + (e.message || e));
+      }
+    };
+  });
 </script>
+
 </body>
 </html>
+
 
 
 
