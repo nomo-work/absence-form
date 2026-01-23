@@ -137,7 +137,7 @@
   function downloadCSV(rows){
     if(!rows.length){ msg("対象データがありません（0件）"); return; }
 
-    const headers = ["datetime","name","department","type","comment"];
+    const headers = ["日時","名前","所属","理由","詳細"];
     const lines = [
       headers.join(","),
       ...rows.map(r => [
@@ -200,6 +200,7 @@
 
 </body>
 </html>
+
 
 
 
