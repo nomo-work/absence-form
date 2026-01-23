@@ -100,6 +100,23 @@ const SUPABASE_KEY = "sb_publishable_5247tSd7ptdrSv6y0972rA_zm_6t99i";
 
 let sending = false;
 
+// --- 現在日時（秒まで） ---
+function updateNowTime(){
+  const el = document.getElementById("nowTime");
+  if (!el) return;
+
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+
+  el.innerText = `現在日時：${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+}
+
+// --- 所属読み込み ---
 async function loadDepartments() {
   const select = document.getElementById("department");
   const message = document.getElementById("message");
@@ -132,20 +149,7 @@ async function loadDepartments() {
   }
 }
 
-  const commentEl = document.getElementById("comment");
-const commentTrimmed = commentEl.value.trim();
-
-if (!commentTrimmed) {
-  message.innerText = "コメントを入力してください（空欄やスペースのみは送信できません）。";
-  commentEl.focus();
-  sending = false;
-  button.disabled = false;
-  button.innerText = "送信";
-  return;
-}
-
-  
-/* ★ これが無くなっていた ★ */
+// --- 送信 ---
 async function submitForm() {
   if (sending) return;
   sending = true;
@@ -157,34 +161,25 @@ async function submitForm() {
   button.innerText = "送信中…";
   message.innerText = "";
 
+  // ★コメント必須（スペースだけNG）
+  const commentEl = document.getElementById("comment");
+  const commentTrimmed = commentEl.value.trim();
+
+  if (!commentTrimmed) {
+    message.innerText = "詳細を入力してください（空欄やスペースのみは送信できません）。";
+    commentEl.focus();
+    button.disabled = false;
+    button.innerText = "送信";
+    sending = false;
+    return;
+  }
+
   const data = {
     name: document.getElementById("name").value,
     department: document.getElementById("department").value,
     type: document.getElementById("type").value,
-    comment: document.getElementById("comment").value
+    comment: commentTrimmed // ★trim後を保存
   };
-function updateNowTime(){
-  const el = document.getElementById("nowTime");
-  console.log("updateNowTime OK");
-  if (!el) return; // ← これでエラーで止まらない
-
-  const d = new Date(); // 日本時間
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
-
-  el.innerText = `現在日時：${y}-${m}-${day} ${hh}:${mm}:${ss}`;
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadDepartments();      // 所属読み込み（既存）
-  updateNowTime();        // 1回表示
-  setInterval(updateNowTime, 1000); // 1秒更新
-});
-
 
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/absence_reports`, {
@@ -214,37 +209,14 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 }
 
+// --- 初期処理（1回だけ） ---
 window.addEventListener("DOMContentLoaded", () => {
-  loadDepartments();     // 既存
-  updateNowTime();       // 初回表示
-  setInterval(updateNowTime, 1000); // ★ 1秒ごとに更新
+  loadDepartments();
+  updateNowTime();
+  setInterval(updateNowTime, 1000);
 });
-
 </script>
 
-
-<script>
-  function updateNowTime(){
-    const el = document.getElementById("nowTime");
-    if (!el) return;
-
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-
-    el.innerText = `現在日時：${y}-${m}-${day} ${hh}:${mm}:${ss}`;
-  }
-
-  // ★ DOMが完全に描画された後に必ず実行
-  document.addEventListener("DOMContentLoaded", () => {
-    updateNowTime();
-    setInterval(updateNowTime, 1000);
-  });
-</script>
 
 </body>
 </html>
