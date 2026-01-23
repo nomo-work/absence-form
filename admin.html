@@ -158,7 +158,7 @@
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `absence_reports_${start}_${end}.csv`;
+    a.download = "欠勤連絡一覧.csv";
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -200,6 +200,7 @@
 
 </body>
 </html>
+
 
 
 
