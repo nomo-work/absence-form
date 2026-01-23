@@ -132,6 +132,19 @@ async function loadDepartments() {
   }
 }
 
+  const commentEl = document.getElementById("comment");
+const commentTrimmed = commentEl.value.trim();
+
+if (!commentTrimmed) {
+  message.innerText = "コメントを入力してください（空欄やスペースのみは送信できません）。";
+  commentEl.focus();
+  sending = false;
+  button.disabled = false;
+  button.innerText = "送信";
+  return;
+}
+
+  
 /* ★ これが無くなっていた ★ */
 async function submitForm() {
   if (sending) return;
